@@ -140,6 +140,42 @@
 )
 
 
+;;; params
+;;; 	file to be decoded
+;;; 	output file path
+;;; 	huffman tree
+;;; objective
+;;;		output the decoded string to the file
+;;; return
+;;;		t
+(defun huffman-decode (file-in file-out tree)
+	(let ((in (open file-in :direction :input :if-does-not-exist nil))
+		  (out (open file-out :direction :output :if-exists :overwrite :if-does-not-exist :create)))
+		
+		(do
+			((c (read-char in nil) (read-char in nil))
+			(node tree))
+			
+			((null c) t)
+
+			
+			(if (string-equal c "0")
+				(setq node (left-child node))
+				(setq node (right-child node)))
+
+			(if (leaf? node)
+				(progn
+					(write-char (cadr node) out)
+					(setq node tree)
+				)
+			)
+		)
+		
+		(close in)
+		(close out)
+	)
+)
+
 
 
 ;;;;;;; HELPER FUNCTIONS FOR TREE MANIPULATION
@@ -265,9 +301,8 @@
 
 ;;;;;; TEST hash table creation
 	
-(huffman-encode "C:\\Users\\Robi\\Desktop\\test_huf_in.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))))
-
-
+;(huffman-encode "C:\\Users\\Robi\\Desktop\\test_huf_in.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))))
+(huffman-decode "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o_dec.txt" (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))
 ;(MAPHASH #'(lambda (k v) (print (list k v))) (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))
 ;(MAPHASH #'(lambda (k v) (print (list k v))) (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))))
 ;;;;;; END test set
