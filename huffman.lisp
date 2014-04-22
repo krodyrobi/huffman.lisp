@@ -104,6 +104,42 @@
 )
 
 
+;;; params
+;;; 	file to be encoded
+;;; 	output file path
+;;; 	hash tabel with codes to be used when encoding
+;;; objective
+;;;		output the ecoded string to the file
+;;; return
+;;;		t
+(defun huffman-encode (fin fout table)
+	(let ((in (open fin :direction :input :if-does-not-exist nil))
+		  (out (open fout :direction :output :if-exists :overwrite :if-does-not-exist :create)))
+
+		(do*
+			((c (read-char in nil) (read-char in nil))
+			 (code (gethash c table) (gethash c table)))
+
+			((null c))
+
+			(if code
+				;(map nil #'(lambda (x)
+				;	(print x)
+				;	(if (eq x "0") (write-byte #*1 out) (write-byte #*0 out)) code))
+				;(write-byte code out)
+				(write-string code out)
+				;	(write-char (gethash c table) out)
+				
+				;;;;; PRINT BIT BY BIT?
+			)
+		)
+		(close in)
+		(close out)
+		t
+	)
+)
+
+
 
 
 ;;;;;;; HELPER FUNCTIONS FOR TREE MANIPULATION
@@ -195,9 +231,6 @@
 )
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;; MAKE SURE WHEN uniting 2 trees if can't find 2 adequate trees use an empty leaf!!!
-
 
 ;;;;; TESTS for leaf weight and child functions
 ;(setq testtree '(9 (1 a) ()))
@@ -231,6 +264,10 @@
 
 
 ;;;;;; TEST hash table creation
+	
+(huffman-encode "C:\\Users\\Robi\\Desktop\\test_huf_in.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))))
+
+
 ;(MAPHASH #'(lambda (k v) (print (list k v))) (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))
-(MAPHASH #'(lambda (k v) (print (list k v))) (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))))
+;(MAPHASH #'(lambda (k v) (print (list k v))) (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))))
 ;;;;;; END test set
