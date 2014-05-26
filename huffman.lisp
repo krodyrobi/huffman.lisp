@@ -212,28 +212,22 @@
 						(node-hasher right (concatenate 'string prev-code "1"))))
 			)))
 
-			;; body of label
-			;; initial check if tree exists and or if it is made out of only a leaf
-			(if tree
-				(if (leaf? tree)
-					(setf (gethash (cadr tree) table) "0")
-					(progn
-						(if (leaf? (left-child tree))
-							(setf (gethash (cadr (left-child tree)) table) "0")
-							(node-hasher (left-child tree) "0"))
+		
+			(if (leaf? (left-child tree))
+				(setf (gethash (cadr (left-child tree)) table) "0")
+				(node-hasher (left-child tree) "0"))
 
-						(if (leaf? (right-child tree))
-							(setf (gethash (cadr (right-child tree)) table) "1")
-							(node-hasher (right-child tree) "1"))
-					)
-				)
-			)
-	
-			;; return the hash tabel
-			table
+			(if (leaf? (right-child tree))
+				(setf (gethash (cadr (right-child tree)) table) "1")
+				(node-hasher (right-child tree) "1"))
 		)
+			
+	
+		;; return the hash tabel
+		table
 	)
 )
+
 
 
 ;;; params
