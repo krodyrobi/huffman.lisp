@@ -58,6 +58,7 @@
 			(if (check-extension (cadr lst) ".huff")
 				(progn 
 					(print "Can't compress a .huff file already compressed")
+					(terpri)
 					nil
 				)
 				t
@@ -67,7 +68,8 @@
 				(if (check-extension (cadr lst) ".huff")
 					t
 					(progn 
-						(print "Can't decompress a file that is not .huff")
+						(print "Can't decompress a file that is not .huff")	
+						(terpri)
 						nil
 					)
 				)
@@ -75,6 +77,7 @@
 		)
 		(progn 
 			(print "Command not valid ex: c C://test.txt")
+			(terpri)
 			nil
 		)
 	)
@@ -111,7 +114,7 @@
 )
 
 
-(main)
+;(main)
 
 
 
@@ -158,18 +161,34 @@
 ;;; return
 ;;;		huff tree
 (defun huff-tree (lst)
-	(do ((tree lst)
-		(left nil)
-		(right nil))
+	(labels ((huff-tree-label (ls)
+		(do ((tree ls)
+			(left nil)
+			(right nil))
 
-		((<= (length tree) 1) (car tree))
+			((<= (length tree) 1) (car tree) )
 
-		(setq tree (my-node-sort tree))
-		(setq left (car tree))
-		(setq right (cadr tree))
-		(setq tree (cons (node-merge left right) (cddr tree)))
+			(setq tree (my-node-sort tree))
+			(setq left (car tree))
+			(setq right (cadr tree))
+			(setq tree (cons (node-merge left right) (cddr tree)))
+		)))
+
+		(if (not (null lst))
+			(if (= (length lst) 1)
+				;(append (list (weight lst)) lst)
+				(node-merge (car lst) '())
+				(huff-tree-label lst)
+			)
+			nil
+		)
 	)
 )
+
+(print (huff-tree '()))
+
+(print (huff-tree '((3 a))))
+(print (huff-tree '((4 a) (1 b))))
 
 
 ;;; params
@@ -420,7 +439,7 @@
 ;;;;;; TEST hash table creation
 
 	
-;(huffman-encode "C:\\Users\\Robi\\Desktop\\test_huf_in.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))))
+;(huffman-encode "C:\\Users\\Robi\\Desktop\\test_huf_in.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))))
 ;(huffman-decode "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o_dec.txt" (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))
 ;(MAPHASH #'(lambda (k v) (print (list k v))) (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))
 ;(MAPHASH #'(lambda (k v) (print (list k v))) (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))))
