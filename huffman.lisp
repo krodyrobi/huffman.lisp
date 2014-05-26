@@ -229,6 +229,47 @@
 )
 
 
+(defun generate-huff-header (tree)
+	(let ((output nil)
+		  (leaf-count 0))
+
+		;struc = tree
+		(labels ((generator (struct)
+			(if (leaf? struct)
+				(progn 
+					(setq leaf-count (+ 1 leaf-count))
+					(setq output (concatenate 'string output "1"))
+					(if (string= "EOF" (cadr struct))
+						(setq output (concatenate 'string output (make-string 9 :initial-element #\1)))
+						(setq output (concatenate 'string output "0" (char-code2bit (cadr struct))))))
+
+				(progn
+					(setq output (concatenate 'string output "0"))
+					(generator (left-child struct))
+					(generator (right-child struct))))))
+		
+			(generator tree)
+		)
+		(setq leaf-count (format nil "~B" leaf-count))
+		(print leaf-count)
+		(setq output (concatenate 'string  (make-string (- 8 (length leaf-count)) :initial-element #\0)	leaf-count output))
+	)
+)
+
+(defun char-code2bit (c)
+	(let ((result (char-code c)))
+		(setq result (format nil "~B" result))
+		(setq result (concatenate 'string (make-string (- 8 (length result)) :initial-element #\0) result))
+	)
+)
+
+;(print (generate-huff-header '(3 (1 #\a) (2 #\b))))
+;(print (concatenate 'string "0" (char-code2bit #\a)))
+
+;(print (generate-huff-header '(3 (1 a) (2 (1 b) (1 c))))
+;(print (generate-huff-header (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))))
+
+
 
 ;;; params
 ;;; 	file to be encoded
