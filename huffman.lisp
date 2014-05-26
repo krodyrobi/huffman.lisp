@@ -1,3 +1,121 @@
+; prints the menu of the app
+(defun menu-helper-msg ()
+	(princ "Commands:")
+	(princ "-------------------------------")
+	(terpri)
+	(princ "c,C filename      -> compress")
+	(terpri)
+	(princ "d,D filename.huff -> decompress")
+	(terpri)
+)
+
+
+;;; params
+;;; 	string => the string that will be tokenized
+;;; objective
+;;;		tokenize a string using the space as a delimiter  OBS: multiple spaces will return empty strings
+;;; return
+;;; 	list of tokens
+(defun split-by-one-space (string)
+    (loop for i = 0 then (1+ j)
+          as j = (position #\Space string :start i)
+          collect (subseq string i j)
+          while j))
+
+
+;;; params
+;;; 	string    => the string that will be checked
+;;; 	extension => the extension that should be the finishing substring of the given string
+;;; return
+;;; 	boolean
+(defun check-extension (string ext)
+	(if (> (length ext) (length string))
+		nil
+
+		(if (string= (subseq string (- (length string) (length ext)) (length string)) ext)
+			t
+			nil
+		)
+	)
+)
+
+(defun parse-command (string)
+	(remove-if #'(lambda (x) 
+				(string= "" x))
+	(split-by-one-space string))
+)
+
+
+;;; params
+;;; 	list      => command , file
+;;; objective
+;;;		See if the given command is a valid choice
+;;; return
+;;; 	boolean
+(defun validate-command (lst)
+	(if (= (length lst) 2)
+		(if (string= (string-downcase (car lst)) "c")
+			(if (check-extension (cadr lst) ".huff")
+				(progn 
+					(print "Can't compress a .huff file already compressed")
+					nil
+				)
+				t
+			)
+
+			(if (string= (string-downcase (car lst)) "d")
+				(if (check-extension (cadr lst) ".huff")
+					t
+					(progn 
+						(print "Can't decompress a file that is not .huff")
+						nil
+					)
+				)
+			)
+		)
+		(progn 
+			(print "Command not valid ex: c C://test.txt")
+			nil
+		)
+	)
+)
+
+
+(defun main ()
+	(do ((running t))
+
+		((null running) t)
+		(menu-helper-msg)
+
+		(progn
+			(clear-input)
+			(setq raw-command (read-line))
+		)
+
+		(if (string= "" raw-command)
+			(progn 
+				(print "exiting...")
+				(setq running nil)
+			)
+			(progn
+				(setq command (parse-command raw-command))
+				(if (validate-command command)
+					(if (string= (string-downcase (car command)) "c")
+						(compress (cadr command))
+						(decompress (cadr command))
+					)
+				)
+			)
+		)
+	)
+)
+
+
+(main)
+
+
+
+
 
 ;;; params
 ;;; 	filepath => path to the file that will be tokenized
@@ -300,9 +418,10 @@
 
 
 ;;;;;; TEST hash table creation
+
 	
 ;(huffman-encode "C:\\Users\\Robi\\Desktop\\test_huf_in.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))))
-(huffman-decode "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o_dec.txt" (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))
+;(huffman-decode "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o_dec.txt" (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))
 ;(MAPHASH #'(lambda (k v) (print (list k v))) (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))
 ;(MAPHASH #'(lambda (k v) (print (list k v))) (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))))
 ;;;;;; END test set
