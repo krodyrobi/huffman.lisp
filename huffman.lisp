@@ -137,6 +137,7 @@
 					(setf (gethash c table) 1))
 		)
 		(close in)
+		(setf (gethash 'EOF table) 1)
 		table
 	)
 )
@@ -176,7 +177,6 @@
 
 		(if (not (null lst))
 			(if (= (length lst) 1)
-				;(append (list (weight lst)) lst)
 				(node-merge (car lst) '())
 				(huff-tree-label lst)
 			)
@@ -184,11 +184,6 @@
 		)
 	)
 )
-
-(print (huff-tree '()))
-
-(print (huff-tree '((3 a))))
-(print (huff-tree '((4 a) (1 b))))
 
 
 ;;; params
