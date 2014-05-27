@@ -17,7 +17,7 @@
 ;;; return
 ;;; 	list of tokens
 (defun split-by-one-space (string)
-    (loop for i = 0 then (1+ j)
+    (loop for i = 0 then (+ 1 j)
           as j = (position #\Space string :start i)
           collect (subseq string i j)
           while j))
@@ -127,11 +127,12 @@
 ;;; return
 ;;;		hash table key (char) => occurence
 (defun parse-input (filepath)  ;rename to parse input
-	(let ((in (open filepath :direction :input :if-does-not-exist nil))
-		  (table (make-hash-table)))
+	(let ((in (open filepath :direction :input :if-does-not-exist nil :element-type '(unsigned-byte 8)))
+		  (table (make-hash-table :test 'equal)))
 		(do
-			((c (read-char in nil) (read-char in nil)))
+			((c (read-byte in nil) (read-byte in nil)))
 			((null c))
+			(setq c (code-char c))
 			(if (gethash c table)
 					(setf (gethash c table) (+ 1 (gethash c table)))
 					(setf (gethash c table) 1))
@@ -193,8 +194,7 @@
 ;;; return
 ;;; 	table key => char value => code
 (defun huff-code-hash (tree)
-	(let ((table (make-hash-table)))
-		
+	(let ((table (make-hash-table :test 'equal)))
 		;; local function node-haser
 		;; it parses each child and determines if it is a leaf constructing its binary code in the process
 		(labels ((node-hasher (node prev-code)
@@ -249,22 +249,12 @@
 					(generator (right-child struct))))))
 		
 			(generator tree))
-
 		(setq output (concatenate 'string (number2bitstr (- leaf-count 1) 8) output))))
 
 (defun number2bitstr (c size)
 	(let ((result c))
 		(setq result (format nil "~B" result))
 		(setq result (concatenate 'string (make-string (- size (length result)) :initial-element #\0) result))))
-
-
-
-;(print (generate-huff-header '(3 (1 #\a) (2 #\b))))
-;(print (concatenate 'string "0" (char-code2bit #\a)))
-
-;(print (generate-huff-header '(3 (1 a) (2 (1 b) (1 c))))
-;(print (generate-huff-header (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))))
-;(print (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))
 
 
 
@@ -277,8 +267,8 @@
 ;;; return
 ;;;		t
 (defun huffman-encode (fin fout)
-	(let ((in (open fin :direction :input :if-does-not-exist nil :element-type 'unsigned-byte))
-		  (out (open fout :direction :output :if-exists :overwrite :if-does-not-exist :create :element-type 'unsigned-byte))
+	(let ((in (open fin :direction :input :if-does-not-exist nil :element-type '(unsigned-byte 8)))
+		  (out (open fout :direction :output :if-does-not-exist :create :element-type '(unsigned-byte 8)))
 		  (tree '())
 		  (tree-map nil)
 		  (cur_byte 0)
@@ -288,8 +278,6 @@
 		(setq tree-map (huff-code-hash tree))
 		(setq header-str (generate-huff-header tree))
 
-		(print header-str)
-		
 		(labels ((printer (str)
 			(loop for c across str do 
 				(setq bit_pos (+ 1 bit_pos))
@@ -299,7 +287,6 @@
 				(if (= bit_pos 8)
 					(progn
 						(write-byte cur_byte out)
-						(print cur_byte)
 						(setq bit_pos 0)
 						(setq cur_byte 0)))
 
@@ -315,16 +302,13 @@
 			(do ((ch (read-byte in nil) (read-byte in nil))) ;ini
 				((null ch)) ; until
 
-				(printer (gethash ch tree-map)))
+				(printer (gethash (code-char ch) tree-map)))
 
 			;;queue EOF on stream
 			(printer (gethash "EOF" tree-map))
 
 			;;dump remaining uncompleted byte
-			(print (ash cur_byte (- 8 bit_pos)))
-			(princ "bit pos ") (princ bit_pos) (terpri)
-			(write-byte (ash cur_byte (- 8 bit_pos)) out)
-
+			(write-byte (ash cur_byte (- 8 (+ bit_pos 1))) out)
 		)		
 		
 		(close in)
@@ -343,17 +327,15 @@
 ;;; return
 ;;;		t
 (defun huffman-decode (file-in file-out)
-	(let* ((in (open file-in :direction :input :if-does-not-exist nil :element-type 'unsigned-byte ))
-		  (out (open file-out :direction :output :if-exists :overwrite :if-does-not-exist :create))
+	(let* ((in (open file-in :direction :input :if-does-not-exist nil :element-type '(unsigned-byte 8) ))
+		  (out (open file-out :direction :output :if-does-not-exist :create :element-type '(unsigned-byte 8) ))
 		  (tree '())
 		  (counter (+ 1 (read-byte in)))  ;; EOF is not counted
 		  (cur_byte (read-byte in))
 		  (cur_bit_value 0)
 		  (bit_pos 0)
 		  (charcode 0))
-		
 
-		;(print tree-map)
 		;; read tree from header
 		(labels ((generator ()
 					(cond
@@ -408,15 +390,17 @@
  
 			(reader)
 			(setq tree (generator)) ;; tree is now formed ready for parsing of file..
-			
+
 			(do ((finished nil)
 				 (cur_tree tree))
 				
 				(finished)
 
 				(if (leaf? cur_tree)
-					(if (equal (type-of (cadr cur_tree)) 'STANDARD-CHAR)
-							(setq cur_tree tree)
+					(if (not (stringp (cadr cur_tree)))
+							(progn
+								(write-byte (char-code (cadr cur_tree)) out)
+								(setq cur_tree tree))
 							(setq finished t))
 
 					(progn
