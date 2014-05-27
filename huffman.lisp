@@ -263,8 +263,8 @@
 ;(print (concatenate 'string "0" (char-code2bit #\a)))
 
 ;(print (generate-huff-header '(3 (1 a) (2 (1 b) (1 c))))
-(print (generate-huff-header (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))))
-(print (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))
+;(print (generate-huff-header (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))))
+;(print (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))
 
 
 
@@ -278,28 +278,14 @@
 ;;;		t
 (defun huffman-encode (fin fout table)
 	(let ((in (open fin :direction :input :if-does-not-exist nil))
-		  (out (open fout :direction :output :if-exists :overwrite :if-does-not-exist :create)))
+		  ;(out (open fout :direction :output :if-exists :overwrite :if-does-not-exist :create)))
 
-		(do*
-			((c (read-char in nil) (read-char in nil))
-			 (code (gethash c table) (gethash c table)))
+		
 
-			((null c))
 
-			(if code
-				;(map nil #'(lambda (x)
-				;	(print x)
-				;	(if (eq x "0") (write-byte #*1 out) (write-byte #*0 out)) code))
-				;(write-byte code out)
-				(write-string code out)
-				;	(write-char (gethash c table) out)
-				
-				;;;;; PRINT BIT BY BIT?
-			)
-		)
 		(close in)
-		(close out)
-		t
+		;(close out)
+		;t
 	)
 )
 
@@ -314,7 +300,7 @@
 ;;;		t
 (defun huffman-decode (file-in file-out)
 	(let* ((in (open file-in :direction :input :if-does-not-exist nil :element-type 'unsigned-byte ))
-		  ;(out (open file-out :direction :output :if-exists :overwrite :if-does-not-exist :create))
+		  (out (open file-out :direction :output :if-exists :overwrite :if-does-not-exist :create))
 		  (tree '())
 		  (counter (+ 1 (read-byte in)))  ;; EOF is not counted
 		  (cur_byte (read-byte in))
@@ -378,17 +364,33 @@
 			(reader)
 			(setq tree (generator)) ;; tree is now formed ready for parsing of file..
 			
-			
+			(do ((finished nil)
+				 (cur_tree tree))
+				
+				(finished)
+
+				(print cur_bit_value)
+
+				(if (leaf? cur_tree)
+					(if (equal (type-of (cadr cur_tree)) 'STANDARD-CHAR)
+							(setq cur_tree tree)
+							(setq finished t))
+
+					(progn
+						(if (= 0 cur_bit_value)
+							(setq cur_tree (left-child cur_tree))
+							(setq cur_tree (right-child cur_tree)))
+
+						(reader)))
+			)
 		)
 
-
-		;(print tree)
 		(close in)
-		;(close out)
+		(close out)
 	)
 )
 
-(huffman-decode "C:\\Users\\Robi\\Desktop\\binary_dw87562.bin" "C:\\Users\\Robi\\Desktop\\test_huf_o_dec.txt")
+;(huffman-decode "C:\\Users\\Robi\\Desktop\\binary_nt56633.bin" "C:\\Users\\Robi\\Desktop\\test_huf_o_dec.txt")
 
 ;;;;;;; HELPER FUNCTIONS FOR TREE MANIPULATION
 
