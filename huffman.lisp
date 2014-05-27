@@ -1,5 +1,6 @@
 ; prints the menu of the app
 (defun menu-helper-msg ()
+	(terpri)
 	(princ "Commands:")
 	(princ "-------------------------------")
 	(terpri)
@@ -39,6 +40,10 @@
 	)
 )
 
+;;; params
+;;; 	string => command string
+;;; return
+;;; 	list => command arg list
 (defun parse-command (string)
 	(remove-if #'(lambda (x) 
 				(string= "" x))
@@ -84,39 +89,26 @@
 )
 
 
+;;; main method for UI and action selection
 (defun main ()
 	(do ((running t))
 
 		((null running) t)
 		(menu-helper-msg)
 
-		(progn
-			(clear-input)
-			(setq raw-command (read-line))
-		)
-
+		(clear-input)
+		(setq raw-command (read-line))
+	
 		(if (string= "" raw-command)
 			(progn 
 				(print "exiting...")
-				(setq running nil)
-			)
+				(setq running nil))
 			(progn
 				(setq command (parse-command raw-command))
 				(if (validate-command command)
 					(if (string= (string-downcase (car command)) "c")
-						(compress (cadr command))
-						(decompress (cadr command))
-					)
-				)
-			)
-		)
-	)
-)
-
-
-;(main)
-
-
+						(huffman-encode (cadr command) (concatenate 'string (cadr command) ".huff"))
+						(huffman-decode (cadr command) (concatenate 'string (cadr command) ".orig"))))))))
 
 
 
@@ -229,6 +221,12 @@
 )
 
 
+;;; params
+;;; 	a huffman tree
+;;; objective
+;;;		generate a huff tree header for the given tree
+;;; return
+;;; 	string in binary form
 (defun generate-huff-header (tree)
 	(let ((output nil)
 		  (leaf-count 0))
@@ -315,8 +313,6 @@
 		(close out)
 	)
 )
-
-(huffman-encode "C:\\Users\\Robi\\Desktop\\test_huf_in.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o.txt")
 
 ;;; params
 ;;; 	file to be decoded
@@ -417,8 +413,6 @@
 	)
 )
 
-(huffman-decode "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o_dec.txt")
-
 ;;;;;;; HELPER FUNCTIONS FOR TREE MANIPULATION
 
 ;;; params
@@ -508,43 +502,5 @@
 )
 
 
-
-;;;;; TESTS for leaf weight and child functions
-;(setq testtree '(9 (1 a) ()))
-;(print (right-child testtree))
-;(print (left-child testtree))
-
-;(print (leaf? (left-child testtree)))
-;(print (leaf? (right-child testtree)))
-
-;(print (weight (right-child testtree)))
-;(print (weight (left-child testtree)))
-;(print (weight testtree))
-
-;(setq testtree '(9 (1 a)))
-
-;(print (right-child testtree))
-;(print (leaf? (right-child testtree)))
-;(print (weight (right-child testtree)))
-;;;;; END test set
-
-
-
-;;;;;; TEST node smaller, init function ,huffman sort ,huffman tree generation
-;(print (node-smaler? '(1 a) '(2 b)))
-;(print (node-smaler? '(10 a) '(2 b)))
-;(print (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))
-;(print (my-node-sort (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))
-;(print (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))
-;;;;;; END test set
-
-
-
-;;;;;; TEST hash table creation
-
-	
-;(huffman-encode "C:\\Users\\Robi\\Desktop\\test_huf_in.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))))
-;(huffman-decode "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o_dec.txt" (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))))
-;(MAPHASH #'(lambda (k v) (print (list k v))) (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt"))
-;(MAPHASH #'(lambda (k v) (print (list k v))) (huff-code-hash (huff-tree (init-huff-list (parse-input "C:\\Users\\Robi\\Desktop\\test_huf_in.txt")))))
-;;;;;; END test set
+(main)
+;(print (validate-command '("c" "C:\\Users\\Robi\\Desktop\\test_huf_in.txt") ))
