@@ -276,19 +276,63 @@
 ;;;		output the ecoded string to the file
 ;;; return
 ;;;		t
-(defun huffman-encode (fin fout table)
-	(let ((in (open fin :direction :input :if-does-not-exist nil))
-		  ;(out (open fout :direction :output :if-exists :overwrite :if-does-not-exist :create)))
+(defun huffman-encode (fin fout)
+	(let ((in (open fin :direction :input :if-does-not-exist nil :element-type 'unsigned-byte))
+		  (out (open fout :direction :output :if-exists :overwrite :if-does-not-exist :create :element-type 'unsigned-byte))
+		  (tree '())
+		  (tree-map nil)
+		  (cur_byte 0)
+		  (bit_pos 0))		
 
+		(setq tree (huff-tree (init-huff-list (parse-input fin))))
+		(setq tree-map (huff-code-hash tree))
+		(setq header-str (generate-huff-header tree))
+
+		(print header-str)
 		
+		(labels ((printer (str)
+			(loop for c across str do 
+				(setq bit_pos (+ 1 bit_pos))
+				(if (eql c #\1)
+					(setq cur_byte (+ 1 cur_byte)))
+
+				(if (= bit_pos 8)
+					(progn
+						(write-byte cur_byte out)
+						(print cur_byte)
+						(setq bit_pos 0)
+						(setq cur_byte 0)))
+
+				(setq cur_byte (ash cur_byte 1)))))
+			
+			;; body of label
 
 
+			;; queue header on stream
+			(printer header-str)
+			
+			;; queue content on stream
+			(do ((ch (read-byte in nil) (read-byte in nil))) ;ini
+				((null ch)) ; until
+
+				(printer (gethash ch tree-map)))
+
+			;;queue EOF on stream
+			(printer (gethash "EOF" tree-map))
+
+			;;dump remaining uncompleted byte
+			(print (ash cur_byte (- 8 bit_pos)))
+			(princ "bit pos ") (princ bit_pos) (terpri)
+			(write-byte (ash cur_byte (- 8 bit_pos)) out)
+
+		)		
+		
 		(close in)
-		;(close out)
-		;t
+		(close out)
 	)
 )
 
+(huffman-encode "C:\\Users\\Robi\\Desktop\\test_huf_in.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o.txt")
 
 ;;; params
 ;;; 	file to be decoded
@@ -309,6 +353,7 @@
 		  (charcode 0))
 		
 
+		;(print tree-map)
 		;; read tree from header
 		(labels ((generator ()
 					(cond
@@ -369,8 +414,6 @@
 				
 				(finished)
 
-				(print cur_bit_value)
-
 				(if (leaf? cur_tree)
 					(if (equal (type-of (cadr cur_tree)) 'STANDARD-CHAR)
 							(setq cur_tree tree)
@@ -390,7 +433,7 @@
 	)
 )
 
-;(huffman-decode "C:\\Users\\Robi\\Desktop\\binary_nt56633.bin" "C:\\Users\\Robi\\Desktop\\test_huf_o_dec.txt")
+(huffman-decode "C:\\Users\\Robi\\Desktop\\test_huf_o.txt" "C:\\Users\\Robi\\Desktop\\test_huf_o_dec.txt")
 
 ;;;;;;; HELPER FUNCTIONS FOR TREE MANIPULATION
 
